@@ -1,0 +1,94 @@
+version: '3.7'
+
+services:
+    minio:
+        restart: always
+        image: minio/minio@sha256:2c8ac2a6255a2fa7b73a0a3647314c07121432b8ca1ce4ed8bfe31ca8495d7f7
+        container_name: mlflow_s3
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        command: server /data --console-address ':9001' --address ':9000'
+        environment:
+            - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+            - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
+        volumes:
+            - ./minio_data:/data
+
+    mc:
+        image: minio/mc@sha256:3adae97df95c66b301b25ca7b38a9d7cfbd93b8f0652687331d552cd046dbfc1
+        depends_on:
+            - minio
+        container_name: mc
+        env_file:
+            - .env
+        entrypoint: >
+            /bin/sh -c "
+            /tmp/wait-for-it.sh minio:9000 &&
+            /usr/bin/mc alias set minio http://minio:9000 ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY} &&
+            /usr/bin/mc mb minio/mlflow;
+            exit 0;
+            "
+        volumes:
+            - ./wait-for-it.sh:/tmp/wait-for-it.sh
+
+    db:
+        restart: always
+        image: mysql/mysql-server@sha256:5b40d96b11333570143d98d3a74100fefadb9abb17b27a95dbc9ad33544ec142
+        container_name: mlflow_db
+        ports:
+            - "3307:3306"
+        environment:
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        volumes:
+            - ./dbdata:/var/lib/mysql
+
+    web:
+        restart: always
+        build: ./mlflow
+        image: mlflow_server
+        container_name: mlflow_server
+        depends_on:
+            - mc
+            - db
+        ports:
+            - "5001:5000"
+        environment:
+            - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
+
+    label-studio:
+        image: heartexlabs/label-studio:latest
+        container_name: label-studio
+        ports:
+            - "8080:8080"  # Map Label Studio's port 8080 to your local machine's port 8080
+        volumes:
+            - ./annotation:/label-studio/data  # Mount a local directory for Label Studio data
+        environment:
+            LABEL_STUDIO_PORT: "8080"  # Optional: Set Label Studio's port via environment variable
+            LABEL_STUDIO_HOST: 0.0.0.0  # Allows access from any host
+            LABEL_STUDIO_USER_TOKEN: ${LABEL_STUDIO_USER_TOKEN}
+    aiapi:
+        build: .
+        # command: gunicorn -w 4 --bind 0.0.0.0:12001 app:app
+        command: python app.py
+        # volumes:
+        #     - ./aiapp:/app
+        ports:
+            - "12001:12001"
+        env_file:
+            - .env
+        # environment:
+        #     FLASK_ENV: development  # Set to 'production' in a production environment
+        #     APIMODE: production
+        #     PROJECTPATH: /app
+volumes:
+    dbdata:
+    minio_data:
+    annotation:
+

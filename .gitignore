@@ -1,0 +1,8 @@
+src/aiapp/
+src/annotation/
+src/dbdata/
+src/minio_data/
+src/mlflow/
+src/wait-for-it.sh/
+src/layout-model-training/data
+src/layout-model-training/outputs

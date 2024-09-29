@@ -1,0 +1,6 @@
+aiapp/
+annotation/
+dbdata/
+minio_data/
+poppler-24.07.0/
+wait-for-it.sh
