@@ -4,7 +4,7 @@ src/dbdata/
 src/minio_data/
 src/mlflow/
 src/wait-for-it.sh/
-src/layout-model-training/data
+src/layout-model-training/data/*
 !src/layout-model-training/data/.gitkeep
-src/layout-model-training/outputs
+src/layout-model-training/outputs/*
 !src/layout-model-training/outputs/.gitkeep
