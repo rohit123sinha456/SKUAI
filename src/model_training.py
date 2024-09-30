@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from threadcommunication import shared_dict,lock 
 from constants import folder_path,latest_model_path
+from mainDev import inferFromLayout
 path = os.environ['PATH']
 APIMODE = os.getenv("APIMODE", "development")  
 poppler_path = ""
@@ -122,6 +123,14 @@ def load_trained_model(client_name):
     wrapped_model = LayoutModelWrapper(model)
     return wrapped_model
 
+def load_trained_model_vanilla(client_name):
+    # Loading the trained model for inference
+    model = lp.models.Detectron2LayoutModel(
+        config_path= f"./layout-model-training/outputs/{client_name}/config.yaml",
+        model_path= f"./layout-model-training/outputs/{client_name}/model_final.pth",
+        extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.4]
+    )
+    return model
 
 def train_and_store_model(clientName):
     COCO_ANNO_PATH = os.path.join(".",folder_path,clientName,"result.json")
@@ -153,8 +162,9 @@ def store_model(clientName):
         mlflow.pyfunc.log_model(artifact_path=clientName,python_model=model,
                                 artifacts={"model_path": model_path,"config_path":config_path},
                                 registered_model_name=clientName)
+    return
 
-def load_and_infer(client_name,filepath,TYPE):
+def load_and_infer(client_name,filepath,TYPE,labels):
     # Load Model from Model Registry
     loadedmodel = None
     vlatest_version = mlflowclient.get_latest_versions(client_name)[0].version
@@ -172,8 +182,26 @@ def load_and_infer(client_name,filepath,TYPE):
         print("Wrong file type")
         return
     layout = loadedmodel.predict(pdfimage)
-    print(layout)
-    return
+    result = inferFromLayout(filepath, layout, labels)
+    print(result)
+    return result
+
+def load_and_infer_vanilla(client_name,filepath,TYPE,labels):
+    # Load Model from Model Registry
+    model = load_trained_model_vanilla(client_name)
+    if(TYPE == "PDF"):
+        pdf_token, pdf_image = lp.load_pdf(filepath,load_images=True) # Not supported. Dont use
+        return "Give Image"
+    elif(TYPE == "IMG"):
+        pdfimage = cv2.imread(filepath)
+    else:
+        print("Wrong file type")
+        return
+    layout = model.detect(pdfimage)
+    result = inferFromLayout(filepath, layout, labels)
+    print(result)
+    return result
+
 
 def main():
     client_name = "Client1"

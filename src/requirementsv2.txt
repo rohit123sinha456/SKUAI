@@ -53,7 +53,8 @@ mypy-extensions==1.0.0
 networkx==3.3
 numpy==1.26.4
 omegaconf==2.3.0
-opencv-python==4.10.0.84
+# opencv-python==4.10.0.84
+opencv-contrib-python-headless
 opentelemetry-api==1.26.0
 opentelemetry-sdk==1.26.0
 opentelemetry-semantic-conventions==0.47b0
@@ -108,3 +109,22 @@ yacs==0.1.8
 zipp==3.19.2
 Flask-Cors
 python-dotenv
+paddlepaddle
+openpyxl
+boto3
+# paddleocr>=2.0.1
+img2table
+# paddleocr requriements
+shapely
+scikit-image
+imgaug
+pyclipper
+lmdb
+rapidfuzz
+# opencv-contrib-python
+cython
+pyyaml
+python-docx
+beautifulsoup4
+fire>=0.3.0
+requests

@@ -8,3 +8,4 @@ src/layout-model-training/data/*
 !src/layout-model-training/data/.gitkeep
 src/layout-model-training/outputs/*
 !src/layout-model-training/outputs/.gitkeep
+src/__pycache__

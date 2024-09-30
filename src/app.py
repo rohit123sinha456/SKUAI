@@ -1,7 +1,7 @@
 from flask import Flask, jsonify,request
 from flask_cors import CORS
 from upload_pipeline import project_creation,convert_pdf_to_jpg,upload_images_from_folder,preprocess_inputs,logging
-from model_training import train_and_store_model,load_and_infer,get_training_status_of_model
+from model_training import train_and_store_model,load_and_infer_vanilla,get_training_status_of_model,store_model
 from export_pipeline import export_annotation
 import os
 import sqlite3
@@ -12,8 +12,10 @@ from dotenv import load_dotenv
 import threading
 from threadcommunication import lock,shared_dict
 from constants import folder_path,latest_model_path
+import json
 
 load_dotenv()
+
 
 path = os.environ['PATH']
 APIMODE = os.getenv("APIMODE", "development")  
@@ -99,6 +101,15 @@ def uploadData():
 
     return jsonify({"message": "Files uploaded successfully"})
 
+@app.route('/upload_weights', methods=['POST'])
+def uploadWeights():
+    data = request.get_json()
+    project_name = data.get('project_name')
+    try:
+        store_model(project_name)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    return jsonify({"message": "Model Loaded successfully"})
 
 @app.route('/export_data', methods=['POST'])
 def exportData():
@@ -136,6 +147,8 @@ def get_training_status(project_name):
 def inferModel():
     key = None
     project_name = request.form.get("project_name")
+    labels = request.form.get("labels")
+    labels = json.loads(labels)
     if 'file' not in request.files:
         return 'No file provided'
     
@@ -151,10 +164,12 @@ def inferModel():
     file_path = os.path.join(temp_dir, file.filename)
     file.save(file_path)
     try:
-        load_and_infer(project_name,file_path,key)
+        result = load_and_infer_vanilla(project_name,file_path,key,labels)
+        print(type(labels))
+        print(labels)
     except Exception as e:
         return jsonify({"Error": str(e)}) , 400
-    return jsonify({"message": "Model Infered successfully"})
+    return jsonify({"message": result})
 
 
 if __name__ == '__main__':
