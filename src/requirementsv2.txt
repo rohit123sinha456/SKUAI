@@ -128,3 +128,5 @@ python-docx
 beautifulsoup4
 fire>=0.3.0
 requests
+pymilvus==2.4.0 # replace with milvusv2.4.12 and pymilvus 2.4.0
+transformers

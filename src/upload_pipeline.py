@@ -75,7 +75,6 @@ def convert_pdf_to_jpg(input_dir, output_dir):
                 for i, img in enumerate(images):
                     img_path = f'{output_path[:-4]}_{i}.jpg' if i > 0 else output_path  # Add index to output image path if multiple pages
                     img.save(img_path, 'JPEG')
-
             except Exception as e:
                 logging.error(f'Error converting {pdf_path}: {e}')
 

@@ -1,6 +1,16 @@
 aiapp/
 annotation/
+exported_data/
 dbdata/
+raw_data/
+volumes/
 minio_data/
 poppler-24.07.0/
+mlruns/
 wait-for-it.sh
+
+latest_models/
+mlflow/
+layout-model-training/data/*
+!src/layout-model-training/data/.gitkeep
+__pycache__/

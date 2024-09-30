@@ -13,7 +13,7 @@ import threading
 from threadcommunication import lock,shared_dict
 from constants import folder_path,latest_model_path
 import json
-
+from vectordb import insert_categories,get_collection,classify_input_text
 load_dotenv()
 
 
@@ -23,12 +23,13 @@ poppler_path = ""
 if APIMODE == "production":
     poppler_path = "/usr/local/bin"  # Path where Poppler is installed in the container
 else:
-    poppler_path = "D:/Rohit/GarmentsSKU/SKU-Garments-/src/poppler-24.07.0/Library/bin" # Arbitrary path for non-production mode
+    poppler_path = "D:/Rohit/GarmentsSKU/SKUAI/src/poppler-24.07.0/Library/bin" # Arbitrary path for non-production mode
 
 os.environ["PATH"] =  poppler_path + ';' + path
 
 DATABASE = 'application.db'
 PROJECT_PATH = os.getenv("PROJECTPATH","D:/Rohit/GarmentsSKU/SKU-Garments-")
+milvuscollection = get_collection()
 app = Flask(__name__)
 CORS(app)
 
@@ -63,6 +64,24 @@ def createProject():
     # Process the data as needed
     return jsonify({"projectID":project_id})
 
+@app.route('/create_categories', methods=['POST'])
+def create_categories():
+    categories = request.get_json()
+    result = insert_categories(milvuscollection,categories)
+    if result == None:
+        return jsonify({"message": "Successfully Inserted Data"})
+    else:
+        return jsonify({"error":result}), 400
+
+
+@app.route('/get_word_categories', methods=['POST'])
+def get_word_categories():
+    data = request.get_json()
+    text = data.get('text')
+    result = classify_input_text(milvuscollection,text)
+    return jsonify({"message" : result})
+
+
 @app.route('/upload_data', methods=['POST'])
 def uploadData():
     project_name = request.form.get("project_name")
@@ -94,7 +113,8 @@ def uploadData():
         print("Uploading images to Label Studio")
         upload_images_from_folder(output_dir, project_id)
         print("Cleaning temporary upload folder")
-        print(os.environ["PATH"])
+        # print(os.environ["PATH"])
+        print(temp_dir)
         shutil.rmtree(temp_dir)
     except Exception as e:
         return jsonify({"error": e}) , 400
