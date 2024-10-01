@@ -6,7 +6,6 @@ src/raw_data/
 src/latest_models/
 src/exported_data/
 src/volumes/
-src/mlflow/
 src/mlruns/
 src/wait-for-it.sh/
 src/layout-model-training/data/*
