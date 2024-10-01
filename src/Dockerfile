@@ -1,7 +1,8 @@
 # Base image
 FROM python:3.10-slim
 ENV DEBIAN_FRONTEND=noninteractive
-
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
 # Install system dependencies required for building Poppler and installing other packages
 RUN apt-get update && \
     apt-get install -y \
@@ -17,11 +18,11 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY requirementsv2.txt .
+COPY requirementsv4.txt .
 
 # Install dependencies
 # RUN pip install --no-cache-dir -r requirementsv2.txt
-RUN pip install  -r requirementsv2.txt
+RUN pip install  -r requirementsv4.txt
 
 
 # RUN pip install --no-cache-dir -e git+https://github.com/facebookresearch/detectron2.git@31bebdea147c96f8a00a0d55931858bf727ae370#egg=detectron2

@@ -82,31 +82,25 @@ class TableExtractor:
                 crop_height, crop_width = crop.shape[:2]
                 target_h, target_w = 600, 800
                 resized = cv2.resize(crop, (target_w, target_h), interpolation=cv2.INTER_AREA)
-                cv2.imwrite(r"D:/Rohit/GarmentsSKU/SKUAI/src/aiapp/table.jpg", crop)
-                # Extract tabular data using img2table
-                cropped_image = Image(r"D:/Rohit/GarmentsSKU/SKUAI/src/aiapp/table.jpg", detect_rotation=True)
-                
-                # # Extract the table into a DataFrame
-                # extracted_table = cropped_image.extract_tables(
-                #     ocr=self.ocr,
-                #     implicit_rows=True,
-                #     implicit_columns=False,
-                #     borderless_tables=True,
-                #     min_confidence=50
-                # )
+                cropped_image = None
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as c_image:
+                    print(c_image.name)
+                    print(type(c_image.name))
+                    cv2.imwrite(c_image.name, crop)
+                    print("Image save Successfully")
+                    cropped_image = Image(c_image.name, detect_rotation=True)
 
                 jsonDf = None
-
                 with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=True) as temp_table:
                     
-                    cropped_image.to_xlsx(dest=temp_table,
+                    cropped_image.to_xlsx(dest=temp_table.name,
                         ocr=self.ocr,
                         implicit_rows=True,
                         implicit_columns=False,
                         borderless_tables=True,
                         min_confidence=50)
 
-                    df = pd.read_excel(temp_table, header=None)
+                    df = pd.read_excel(temp_table.name, header=None)
                     jsonDf = df.to_json(orient='records')
 
                 extracted_table_list.append({

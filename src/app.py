@@ -150,7 +150,7 @@ def trainModel():
         return jsonify({"message": "Export data before training"})
     with lock:
         shared_dict[project_name] = False
-    thread = threading.Thread(target=train_and_store_model, args=(project_name))
+    thread = threading.Thread(target=train_and_store_model, args=(project_name,))
     thread.start()
     # train_and_store_model(project_name)
     return jsonify({"message": "Model is training"})
