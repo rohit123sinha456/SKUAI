@@ -5,7 +5,6 @@ import cv2
 import random
 import requests
 import torch
-import detectron2
 import pandas as pd
 import layoutparser as lp
 from pycocotools.coco import COCO
