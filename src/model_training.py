@@ -6,6 +6,7 @@ import random
 import requests
 import torch
 import detectron2
+import pandas as pd
 import layoutparser as lp
 from pycocotools.coco import COCO
 from detectron2.config import get_cfg
@@ -131,6 +132,12 @@ def load_trained_model_vanilla(client_name):
         extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.4]
     )
     return model
+
+def get_model_metrics(client_name):
+    csv_path= f"./layout-model-training/outputs/{client_name}/eval.csv"
+    df = pd.read_csv(csv_path)
+    return df
+
 
 def train_and_store_model(clientName):
     COCO_ANNO_PATH = os.path.join(".",folder_path,clientName,"result.json")

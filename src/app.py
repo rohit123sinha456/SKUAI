@@ -1,7 +1,7 @@
 from flask import Flask, jsonify,request
 from flask_cors import CORS
 from upload_pipeline import project_creation,convert_pdf_to_jpg,upload_images_from_folder,preprocess_inputs,logging
-from model_training import train_and_store_model,load_and_infer_vanilla,get_training_status_of_model,store_model
+from model_training import train_and_store_model,load_and_infer_vanilla,get_training_status_of_model,store_model,get_model_metrics
 from export_pipeline import export_annotation
 import os
 import sqlite3
@@ -161,7 +161,13 @@ def get_training_status(project_name):
         status = get_training_status_of_model(str(project_name))
     except Exception as e:
         return jsonify({"Error": str(e)}) , 400
-    return jsonify({"Training complete status": status})
+    return jsonify({"Training complete status ": status})
+
+@app.route('/get_model_metrics/<project_name>', methods=['GET'])
+def get_client_model_metrics(project_name):
+    result = get_model_metrics(project_name)
+    jsonresult = result.to_json()
+    return jsonify({"Model Metrics ": jsonresult})
 
 @app.route('/infer', methods=['POST'])
 def inferModel():
