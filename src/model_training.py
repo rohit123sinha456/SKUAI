@@ -8,8 +8,6 @@ import torch
 import pandas as pd
 import layoutparser as lp
 from pycocotools.coco import COCO
-from detectron2.config import get_cfg
-from detectron2.engine import DefaultTrainer
 import mlflow
 from dotenv import load_dotenv
 load_dotenv()
