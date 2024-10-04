@@ -155,6 +155,20 @@ def trainModel():
     # train_and_store_model(project_name)
     return jsonify({"message": "Model is training"})
 
+@app.route('/train_model_log', methods=['POST'])
+def trainModelLog():
+    data = request.get_json()
+    project_name = data.get('project_name')
+    if not os.path.exists(os.path.join(".",folder_path,project_name)):
+        return jsonify({"message": "Export data before training"})
+    with lock:
+        shared_dict[project_name] = False
+    thread = threading.Thread(target=train_and_store_model, args=(project_name,))
+    thread.start()
+    # train_and_store_model(project_name)
+    return jsonify({"message": "Model is training"})
+
+
 @app.route('/get_training_status/<project_name>', methods=['GET'])
 def get_training_status(project_name):
     try:
