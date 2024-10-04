@@ -11,9 +11,14 @@ docker-compose --version
  sudo chown -R 1001:1001 annotation/
  sudo chown -R 1001:1001 aiapp/
  generate token from label studio
+ generate KEY_ID of object Store
+ genertate ACCESS_KEY_ID object Store
+ create a bucket mlflow in minio
  place it in .env file
  then docker compose build
  docker compose up- d
+
+
 
  SV1
  {
