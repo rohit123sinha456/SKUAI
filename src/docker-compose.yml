@@ -27,9 +27,6 @@ services:
         ports:
             - "9000:9000"
             - "9001:9001"
-        networks:
-            - frontend
-            - backend
         environment:
             - MINIO_ROOT_USER=${MINIO_ROOT_USER}
             - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -44,8 +41,6 @@ services:
         restart: always
         image: mysql/mysql-server@sha256:5b40d96b11333570143d98d3a74100fefadb9abb17b27a95dbc9ad33544ec142
         container_name: mlflow_db
-        networks:
-            - backend
         ports:
             - "3307:3306"
         environment:
@@ -81,9 +76,6 @@ services:
             - db
         ports:
             - "5001:5000"
-        networks:
-            - frontend
-            - backend
         environment:
             - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
             - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY}
@@ -105,9 +97,6 @@ services:
     label-studio:
         image: heartexlabs/label-studio:latest
         container_name: label-studio
-        networks:
-            - frontend
-            - backend
         ports:
             - "8080:8080"  # Map Label Studio's port 8080 to your local machine's port 8080
         volumes:
@@ -120,9 +109,6 @@ services:
         build: .
         # command: gunicorn -w 4 --bind 0.0.0.0:12001 app:app
         command: python app.py
-        networks:
-            - frontend
-            - backend
         # volumes:
         #     - . :/app
         ports:
