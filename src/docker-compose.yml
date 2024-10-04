@@ -1,42 +1,51 @@
 version: '3.7'
 include:
   - milvus-standalone-docker-compose.yml  #with serviceB declared
+
 services:
-    minio:
+    # minio:
+    #     restart: always
+    #     image: minio/minio@sha256:2c8ac2a6255a2fa7b73a0a3647314c07121432b8ca1ce4ed8bfe31ca8495d7f7
+    #     container_name: mlflow_s3
+    #     ports:
+    #         - "9000:9000"
+    #         - "9001:9001"
+    #     command: server /data --console-address ':9001' --address ':9000'
+    #     environment:
+    #         - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+    #         - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
+    #     volumes:
+    #         - ./minio_data:/data
+
+
+    s3:
         restart: always
-        image: minio/minio@sha256:2c8ac2a6255a2fa7b73a0a3647314c07121432b8ca1ce4ed8bfe31ca8495d7f7
-        container_name: mlflow_s3
+        image: minio/minio
+        container_name: mlflow_minio
+        volumes:
+            - ./minio_data:/data
         ports:
             - "9000:9000"
             - "9001:9001"
-        command: server /data --console-address ':9001' --address ':9000'
+        networks:
+            - frontend
+            - backend
         environment:
-            - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
-            - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
-        volumes:
-            - ./minio_data:/data
-
-    mc:
-        image: minio/mc@sha256:3adae97df95c66b301b25ca7b38a9d7cfbd93b8f0652687331d552cd046dbfc1
-        depends_on:
-            - minio
-        container_name: mc
-        env_file:
-            - .env
-        entrypoint: >
-            /bin/sh -c "
-            /tmp/wait-for-it.sh minio:9000 &&
-            /usr/bin/mc alias set minio http://minio:9000 ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY} &&
-            /usr/bin/mc mb minio/mlflow;
-            exit 0;
-            "
-        volumes:
-            - ./wait-for-it.sh:/tmp/wait-for-it.sh
+            - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+            - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        command: server /data --console-address ':9001' --address ':9000'
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+            interval: 30s
+            timeout: 20s
+            retries: 3
 
     db:
         restart: always
         image: mysql/mysql-server@sha256:5b40d96b11333570143d98d3a74100fefadb9abb17b27a95dbc9ad33544ec142
         container_name: mlflow_db
+        networks:
+            - backend
         ports:
             - "3307:3306"
         environment:
@@ -47,21 +56,51 @@ services:
         volumes:
             - ./dbdata:/var/lib/mysql
 
-    mlflow_server:
+    # mlflow_server:
+    #     restart: always
+    #     build: ./mlflow
+    #     image: mlflow_server
+    #     container_name: mlflow_server
+    #     depends_on:
+    #         - mc
+    #         - db
+    #     ports:
+    #         - "5001:5000"
+    #     environment:
+    #         - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    #         - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    #         - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    #     command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
+
+    tracking_server:
         restart: always
         build: ./mlflow
         image: mlflow_server
         container_name: mlflow_server
         depends_on:
-            - mc
             - db
         ports:
             - "5001:5000"
+        networks:
+            - frontend
+            - backend
         environment:
-            - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-        command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
+            - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+            - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY}
+            - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
+            - MLFLOW_S3_IGNORE_TLS=true
+        command: >
+            mlflow server
+            --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+            --host 0.0.0.0
+            --serve-artifacts
+            --artifacts-destination s3://mlflow
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
 
     label-studio:
         image: heartexlabs/label-studio:latest
@@ -100,3 +139,8 @@ volumes:
     minio_data:
     annotation:
 
+networks:
+    frontend:
+      driver: bridge
+    backend:
+      driver: bridge

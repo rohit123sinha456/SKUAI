@@ -24,6 +24,9 @@ else:
 
 os.environ["PATH"] =  poppler_path + ';' + path
 
+os.environ["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID") # "GMm4SwQs065M9iMaQ2cF"
+os.environ["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY") #"adzbR3Kg3eS0oROgBbBizbQp2F4XPhXWE6d0nsPL"
+os.environ["MLFLOW_S3_ENDPOINT_URL"] = os.getenv("S3ENDPOINT") #f"http://localhost:9000"
 mlflow.set_tracking_uri(os.getenv("MLFLOWRUL"))
 mlflowclient = mlflow.MlflowClient()
 # folder_path = 'exported_data'

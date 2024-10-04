@@ -1,4 +1,2 @@
-werkzeug \u2192 WARNING:  * Debugger is active!
-werkzeug \u2192 INFO:  * Debugger PIN: 137-387-807
-werkzeug \u2192 INFO: 127.0.0.1 - - [03/Oct/2024 11:54:09] "GET /get_model_metrics/SV1 HTTP/1.1" 200 -
-werkzeug \u2192 INFO: 127.0.0.1 - - [03/Oct/2024 13:23:44] "POST /get_word_categories HTTP/1.1" 200 -
+layoutparser.file_utils \u2192 DEBUG: PyTorch version 2.4.0 available.
+layoutparser.file_utils \u2192 DEBUG: Detectron2 version 0.6 available

@@ -13,3 +13,4 @@ src/layout-model-training/data/*
 src/layout-model-training/outputs/*
 !src/layout-model-training/outputs/.gitkeep
 src/__pycache__
+mlruns/
