@@ -212,7 +212,7 @@ def inferModel():
             convert_pdf_to_jpg(temp_dir, output_dir)
             for file in os.listdir(output_dir):
                 image_path = os.path.join(output_dir,file)
-                result = load_and_infer_vanilla(project_name,image_path,key,labels)
+                result = load_and_infer_vanilla(project_name,image_path,"IMG",labels)
                 total_result.append(result)
             return jsonify({"combined_message": total_result})
         except Exception as e:
