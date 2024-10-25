@@ -79,7 +79,18 @@ class LayoutTextExtractor:
                 resized = cv2.resize(crop, (target_w, target_h), interpolation=cv2.INTER_AREA)
 
                 # Extract text using OCR
-                result = self.ocr.ocr(crop)
+                # result = self.ocr.ocr(crop)
+                result = ""
+                try:
+                    # Convert the NumPy array to an image format that PaddleOCR can read
+                    result = self.ocr.ocr(crop)
+                except Exception as e:            
+                    print(f"Error during OCR processing: {e}")
+                    del(self.ocr)
+                    self.ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+                    result = self.ocr.ocr(crop)
+
+
                 words = []
                 for line in result:
                     for word_info in line:
