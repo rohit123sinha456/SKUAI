@@ -203,6 +203,21 @@ def inferModel():
     temp_dir = tempfile.mkdtemp()
     file_path = os.path.join(temp_dir, file.filename)
     file.save(file_path)
+    output_dir = ""
+    if key == "PDF":
+        total_result = []
+        try:
+            output_dir = tempfile.mkdtemp()
+            print("Converting Images to Images")
+            convert_pdf_to_jpg(temp_dir, output_dir)
+            for file in os.listdir(output_dir):
+                image_path = os.join(output_dir,file)
+                result = load_and_infer_vanilla(project_name,image_path,key,labels)
+                total_result.append(result)
+            return jsonify({"combined_message": total_result})
+        except Exception as e:
+            return jsonify({"Error": str(e)}) , 400
+
     try:
         result = load_and_infer_vanilla(project_name,file_path,key,labels)
         print(type(labels))
