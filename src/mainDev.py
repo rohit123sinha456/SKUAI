@@ -1,19 +1,29 @@
 from DataDev import LayoutTextExtractor
 from TableDev import TableExtractor
+from ColumnDev import ColumnExtractor
 
 text = LayoutTextExtractor()
 table = TableExtractor()
+column = ColumnExtractor()
 
 def inferFromLayout(path, layout, labels):
    
     table_list = []
+    column_list = []
+    text_list = []
     label_map = {}
     for key, value in labels.items():
         if value["Type"] == "Table":
-            table_list.append(int(key))
-        label_map[int(key)] =  value["Name"]
-    extracted_text_data = text.extract_text_from_block(path, layout, label_map, table_list)
+            table_list.append(key)
+        if value["Type"] == "Text":
+            text_list.append(key)
+        if value["Type"] == "Column":
+            column_list.append(key)
+        label_map[key] =  value["Name"]
+
+    extracted_text_data = text.extract_text_from_block(path, layout, label_map, text_list)
     extracted_table_data = table.extract_table_from_block(path, layout, label_map, table_list)
+    extracted_column_data = column.extract_column_from_block(path, layout, label_map, column_list)
 
     myDict = {}
 
@@ -29,11 +39,11 @@ def inferFromLayout(path, layout, labels):
 
     # Table Data
     for id, data in enumerate(extracted_table_data):
-        print("+++++++++++++++++++++++++++++++++++++++++++++++")
-        print(type(data['table']))
-        print(data['table'])
-        print("+++++++++++++++++++++++++++++++++++++++++++++")
         myDict[data['label']] = data['table']
+    
+    # Column Data
+    for id, data in enumerate(extracted_column_data):
+        myDict[data['label']] = data['columns']
 
     return myDict
 

@@ -3,7 +3,7 @@ import cv2
 import layoutparser as lp
 from paddleocr import PaddleOCR
 
-class LayoutTextExtractor:
+class ColumnExtractor:
     def __init__(self,  ocr_lang='en', use_ocr=True):
         """
         Initializes the LayoutTextExtractor class.
@@ -37,7 +37,8 @@ class LayoutTextExtractor:
         layout = self.model.detect(img)
         return layout, img
 
-    def extract_text_from_block(self, img_path, layout, label_map, text_list):
+
+    def extract_column_from_block(self, img_path, layout, label_map, column_list):
         """
         Extracts text from a specific image block using OCR.
         
@@ -66,10 +67,10 @@ class LayoutTextExtractor:
             }
             metadata.append(label_info)
         
-        extracted_data = []
+        extracted_column = []
         
         for data in metadata:
-            if data['type'] in text_list:  # Exclude TableContents (label 5)
+            if data['type'] in column_list:  # Exclude TableContents (label 5)
                 x1, x2, y1, y2 = data['coordinates']['x1'], data['coordinates']['x2'], data['coordinates']['y1'], data['coordinates']['y2']
                 x1, x2, y1, y2 = int(x1), int(x2), int(y1), int(y2)
 
@@ -79,16 +80,16 @@ class LayoutTextExtractor:
                 resized = cv2.resize(crop, (target_w, target_h), interpolation=cv2.INTER_AREA)
 
                 # Extract text using OCR
-                # result = self.ocr.ocr(crop)
                 result = ""
                 try:
                     # Convert the NumPy array to an image format that PaddleOCR can read
                     result = self.ocr.ocr(crop)
                 except Exception as e:            
-                    print(f"Error during OCR processing: {e}")
+                    print(f"Error during OCR processing Column: {e}")
                     del(self.ocr)
-                    self.ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+                    self.ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
                     result = self.ocr.ocr(crop)
+                
 
 
                 words = []
@@ -107,11 +108,48 @@ class LayoutTextExtractor:
                             }
                             words.append(word)
 
+                arr = []
+                for idx, word in enumerate(words):
+                    arr.append(word)
+
+                sorted_arr = sorted(arr, key=lambda x: x['y'])
+                # print("Sorted Array: ", sorted_arr)
+
+                diff_arr = []
+                for i in range(len(sorted_arr) - 1):
+                    diff = sorted_arr[i + 1]['y'] - sorted_arr[i]['y']
+                    diff_arr.append(diff)
+                # print("Difference Array: ", diff_arr)
+
+                x = max(diff_arr) - min(diff_arr)
+
+                # print("Mean Difference: ")
+                res_text = []
+                temp_arr = []
+                
+                for i in range(len(sorted_arr) - 1):
+                    diff = sorted_arr[i + 1]['y'] - sorted_arr[i]['y']
+                    if diff > x:
+                        if len(temp_arr) == 0:
+                            temp_arr.append(sorted_arr[i]['text'])
+                        res_text.append(' '.join(temp_arr))
+                        temp_arr = []
+                        # print(sorted_arr[i]['y'], sorted_arr[i+1]['y'])
+                    else:
+                        temp_arr.append(sorted_arr[i]['text'])
+                        temp_arr.append(sorted_arr[i+1]['text'])
+                
+                if len(temp_arr) == 0:
+                    temp_arr.append(sorted_arr[i+1]['text'])
+                
+                res_text.append(' '.join(temp_arr))
+                # print("Resulting Text: ", res_text)
+
                 # Add the extracted words along with their label
-                extracted_data.append({
+                extracted_column.append({
                     "label": label_map.get(data['type'], "Unknown"),
                     "coordinates": data['coordinates'],
-                    "words": words
+                    "columns": res_text
                 })
-        
-        return extracted_data
+
+        return extracted_column
