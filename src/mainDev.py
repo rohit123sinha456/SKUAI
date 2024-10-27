@@ -14,12 +14,12 @@ def inferFromLayout(path, layout, labels):
     label_map = {}
     for key, value in labels.items():
         if value["Type"] == "Table":
-            table_list.append(key)
+            table_list.append(int(key))
         if value["Type"] == "Text":
-            text_list.append(key)
+            text_list.append(int(key))
         if value["Type"] == "Column":
-            column_list.append(key)
-        label_map[key] =  value["Name"]
+            column_list.append(int(key))
+        label_map[int(key)] =  value["Name"]
 
     extracted_text_data = text.extract_text_from_block(path, layout, label_map, text_list)
     extracted_table_data = table.extract_table_from_block(path, layout, label_map, table_list)
